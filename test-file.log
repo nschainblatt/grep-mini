@@ -1,0 +1,10 @@
+2024-01-28 09:15:03 INFO User john logged in from IP 192.168.1.10
+2024-01-28 09:17:21 WARNING Disk usage exceeded 90% on server srv01
+2024-01-28 09:18:35 INFO User jane accessed resource /api/data
+2024-01-28 09:20:47 ERROR Database connection failed on srv02
+2024-01-28 09:22:59 INFO Backup completed successfully on srv03
+2024-01-28 09:24:10 INFO User mike logged out
+2024-01-28 09:25:24 WARNING Memory usage high on srv04
+2024-01-28 09:26:37 ERROR Unable to send email notification
+2024-01-28 09:28:45 INFO Scheduled maintenance starting on srv01
+2024-01-28 09:30:02 WARNING Low disk space on srv05
