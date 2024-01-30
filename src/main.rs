@@ -3,11 +3,17 @@ use std::fs;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let config = Config::new(&args);
-    println!(
-        "Searching for {} in file {}",
-        config.query, config.file_path
-    );
+    let config = Config::build(&args);
+
+    match config {
+        Ok(val) => {
+            println!("Searching for {} in file {}", val.query, val.file_path);
+            let content =
+                fs::read_to_string(val.file_path).expect("Should have been able to read from file");
+            println!("{}", content);
+        }
+        Err(e) => println!("{}", e),
+    };
 }
 
 struct Config {
@@ -16,16 +22,13 @@ struct Config {
 }
 
 impl Config {
-    fn new(args: &[String]) -> Config {
+    fn build(args: &[String]) -> Result<Config, &'static str> {
         if args.len() < 3 {
-            panic!(
-                "Not enough arguments were provided, \
-                    please include the search query and the file path"
-            );
+            return Err("Not enough arguments were provided");
         }
         let query = args[1].clone();
         let file_path = args[2].clone();
 
-        Config { query, file_path }
+        Ok(Config { query, file_path })
     }
 }
