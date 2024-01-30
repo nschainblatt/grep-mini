@@ -1,19 +1,21 @@
 use std::env;
 use std::fs;
+use std::process;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let config = Config::build(&args);
+    let config = Config::build(&args).unwrap_or_else(|error| {
+        println!("Problem parsing arguments: {error}");
+        process::exit(1);
+    });
 
-    match config {
-        Ok(val) => {
-            println!("Searching for {} in file {}", val.query, val.file_path);
-            let content =
-                fs::read_to_string(val.file_path).expect("Should have been able to read from file");
-            println!("{}", content);
-        }
-        Err(e) => println!("{}", e),
-    };
+    println!(
+        "Searching for {} in file {}",
+        config.query, config.file_path
+    );
+    let content =
+        fs::read_to_string(config.file_path).expect("Should have been able to read from file");
+    println!("{}", content);
 }
 
 struct Config {
@@ -24,7 +26,7 @@ struct Config {
 impl Config {
     fn build(args: &[String]) -> Result<Config, &'static str> {
         if args.len() < 3 {
-            return Err("Not enough arguments were provided");
+            return Err("not enough arguments provided");
         }
         let query = args[1].clone();
         let file_path = args[2].clone();
