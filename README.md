@@ -11,3 +11,6 @@ Grep (global regular expression print) is command found in Linux or Unix systems
     - `cargo build` compiles and created the executable
 4. Run the executable which can be found at **grep-mini/target/debug/minigrep** 
     - `./minigrep <SEARCH> <FILEPATH>`
+
+## Future Additions
+- Colored Text
