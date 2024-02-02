@@ -19,12 +19,11 @@ fn main() {
                 println!("Search argument not found in {}", &config.file_path);
                 process::exit(0);
             }
-            println!("Found {} line/s", found_lines.len()); 
+            println!("Found {} line/s", found_lines.len());
             for line in found_lines {
                 println!("line: {} -- {} ", &line.line_number, &line.contents);
             }
-
-        },
+        }
         Err(error) => {
             println!("{error}");
             process::exit(1);

@@ -59,6 +59,17 @@ mod tests {
             "2024-01-28 09:15:03 INFO User john logged in from IP 192.168.1.10".to_string()
         );
     }
+
+    #[test]
+    fn one_result() {
+        let query = "duct".to_string();
+        let contents = "\
+Rust:
+safe, fast, productive.
+Pick three.".to_string();
+
+        assert_eq!(vec!["safe, fast, productive.".to_string()][0], search(&query, &contents)[0].contents);
+    }
 }
 
 pub struct Config {
@@ -94,7 +105,10 @@ pub fn search(query: &String, contents: &String) -> Vec<FoundLine> {
     let mut found_lines: Vec<FoundLine> = Vec::new();
     for (idx, line) in lines.enumerate() {
         if line.contains(query) {
-            found_lines.push(FoundLine { contents: line.to_string(), line_number: idx + 1 });
+            found_lines.push(FoundLine {
+                contents: line.to_string(),
+                line_number: idx + 1,
+            });
         }
     }
     found_lines
