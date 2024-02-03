@@ -15,7 +15,14 @@ impl Config {
         }
         let query = args[1].clone();
         let file_path = args[2].clone();
-        let check_case = env::var("CHECK_CASE").is_ok();
+
+        let check_case: bool = if args.get(3).is_some() && &args[3] == "CHECK_CASE" {
+            true
+        } else if args.get(3).is_none() && env::var("CHECK_CASE").is_ok() {
+            true
+        } else {
+            false
+        };
 
         Ok(Config {
             query,
