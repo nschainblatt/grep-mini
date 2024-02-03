@@ -1,85 +1,11 @@
-use ::std::error;
+use std::env;
+use std::error;
 use std::fs;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn build_config() {
-        let args = vec![
-            "".to_string(),
-            "cat".to_string(),
-            "test-file.log".to_string(),
-        ];
-        let _ = Config::build(&args).unwrap();
-    }
-
-    #[test]
-    fn getting_content() {
-        let args = vec![
-            "".to_string(),
-            "cat".to_string(),
-            "test-file.log".to_string(),
-        ];
-        let config = Config::build(&args).unwrap();
-        let _ = run(&config).unwrap();
-    }
-
-    #[test]
-    #[should_panic(expected = "not enough arguments")]
-    fn not_enough_args() {
-        let args = vec!["cat".to_string(), "test-file.log".to_string()];
-        let _ = Config::build(&args).unwrap();
-    }
-
-    #[test]
-    #[should_panic(expected = "No such file")]
-    fn file_not_found() {
-        let args = vec![
-            "".to_string(),
-            "cat".to_string(),
-            "final-paper.txt".to_string(),
-        ];
-        let config = Config::build(&args).unwrap();
-        let _ = run(&config).unwrap();
-    }
-
-    #[test]
-    fn search_contents() {
-        let args = vec![
-            "".to_string(),
-            "john".to_string(),
-            "test-file.log".to_string(),
-        ];
-        let config = Config::build(&args).unwrap();
-        let contents = run(&config).unwrap();
-        let results = search(&config.query, &contents);
-        assert_eq!(
-            results[0].contents,
-            "2024-01-28 09:15:03 INFO User john logged in from IP 192.168.1.10".to_string()
-        );
-    }
-
-    #[test]
-    fn one_result() {
-        let query = "duct".to_string();
-        let contents = "\
-Rust:
-safe, fast, productive.
-Pick three.".to_string();
-
-        assert_eq!(vec!["safe, fast, productive.".to_string()][0], search(&query, &contents)[0].contents);
-    }
-}
 
 pub struct Config {
     pub query: String,
     pub file_path: String,
-}
-
-pub struct FoundLine {
-    pub contents: String,
-    pub line_number: usize,
+    pub check_case: bool,
 }
 
 impl Config {
@@ -89,27 +15,111 @@ impl Config {
         }
         let query = args[1].clone();
         let file_path = args[2].clone();
+        let check_case = env::var("CHECK_CASE").is_ok();
 
-        Ok(Config { query, file_path })
+        Ok(Config {
+            query,
+            file_path,
+            check_case,
+        })
     }
 }
 
-pub fn run(config: &Config) -> Result<String, Box<dyn error::Error>> {
-    let contents = fs::read_to_string(&config.file_path)?;
-
-    Ok(contents)
+#[derive(Debug, PartialEq)]
+struct LineMatch<'a> {
+    contents: &'a str,
+    number: usize,
 }
 
-pub fn search(query: &String, contents: &String) -> Vec<FoundLine> {
-    let lines = contents.split("\n");
-    let mut found_lines: Vec<FoundLine> = Vec::new();
-    for (idx, line) in lines.enumerate() {
+pub fn run(config: Config) -> Result<(), Box<dyn error::Error>> {
+    let contents = fs::read_to_string(config.file_path)?;
+
+    let result: Vec<LineMatch> = if config.check_case {
+        search_case_sensitive(&config.query, &contents)
+    } else {
+        search_case_insensitive(&config.query, &contents)
+    };
+
+    if result.len() > 0 {
+        for line in result {
+            println!("Line: {} -> {}", line.number, line.contents);
+        }
+    } else {
+        println!("No matches found");
+    }
+    Ok(())
+}
+
+fn search_case_sensitive<'a>(query: &str, contents: &'a str) -> Vec<LineMatch<'a>> {
+    let mut results: Vec<LineMatch<'a>> = Vec::new();
+    for (number, line) in contents.lines().enumerate() {
         if line.contains(query) {
-            found_lines.push(FoundLine {
-                contents: line.to_string(),
-                line_number: idx + 1,
+            results.push(LineMatch {
+                contents: line,
+                number: number + 1,
             });
         }
     }
-    found_lines
+    results
+}
+
+fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<LineMatch<'a>> {
+    let mut results: Vec<LineMatch<'a>> = Vec::new();
+    let query = query.to_uppercase();
+    for (number, line) in contents.lines().enumerate() {
+        if line.to_uppercase().contains(&query) {
+            results.push(LineMatch {
+                contents: line,
+                number: number + 1,
+            });
+        }
+    }
+    results
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn case_sensitive() {
+        let query = "duct";
+        let contents = "\
+Rust:
+safe, fast, productive.
+Pick three.
+Duck tape.";
+
+        assert_eq!(
+            vec![LineMatch {
+                contents: "safe, fast, productive.",
+                number: 2
+            }],
+            search_case_sensitive(query, contents)
+        );
+    }
+
+    #[test]
+    fn case_insensitive() {
+        let query = "rUst";
+        let contents = "\
+Rust:
+safe, fast, productive.
+Pick three.
+Trust me.";
+
+        assert_eq!(
+            vec![
+                LineMatch {
+                    contents: "Rust:",
+                    number: 1
+                },
+                LineMatch {
+                    contents: "Trust me.",
+                    number: 4
+                }
+            ],
+            search_case_insensitive(query, contents)
+        );
+    }
 }
