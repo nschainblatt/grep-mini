@@ -9,16 +9,20 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments provided");
-        }
-        let query = args[1].clone();
-        let file_path = args[2].clone();
+    pub fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        args.next();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Missing query"),
+        };
+        let file_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Missing file path"),
+        };
 
-        let check_case: bool = if args.get(3).is_some() && &args[3] == "CHECK_CASE" {
+        let check_case: bool = if args.next() == Some("CHECK_CASE".to_string()) {
             true
-        } else if args.get(3).is_none() && env::var("CHECK_CASE").is_ok() {
+        } else if args.next() == None && env::var("CHECK_CASE").is_ok() {
             true
         } else {
             false
