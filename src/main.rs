@@ -1,4 +1,4 @@
-use minigrep::Config;
+use grep_mini::Config;
 use std::env;
 use std::process;
 
@@ -7,7 +7,7 @@ fn main() {
         eprintln!("Problem parsing arguments: {error}");
         process::exit(1);
     });
-    if let Err(error) = minigrep::run(config) {
+    if let Err(error) = grep_mini::run(config) {
         eprintln!("{error}");
         process::exit(1);
     }

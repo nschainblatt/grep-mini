@@ -37,9 +37,9 @@ impl Config {
 }
 
 #[derive(Debug, PartialEq)]
-struct LineMatch<'a> {
-    contents: &'a str,
-    number: usize,
+pub struct LineMatch<'a> {
+    pub contents: &'a str,
+    pub number: usize,
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn error::Error>> {
@@ -61,7 +61,16 @@ pub fn run(config: Config) -> Result<(), Box<dyn error::Error>> {
     Ok(())
 }
 
-fn search_case_sensitive<'a>(query: &str, contents: &'a str) -> Vec<LineMatch<'a>> {
+/// Searches a file for a specified string
+///
+/// # Example
+///
+/// ```
+/// use grep_mini::{search_case_sensitive, LineMatch};
+/// let lines_found = search_case_sensitive("Cat", "Cat in the hat");
+/// assert_eq!(vec![LineMatch{ contents: "Cat in the hat", number: 1 }], lines_found );
+/// ```
+pub fn search_case_sensitive<'a>(query: &str, contents: &'a str) -> Vec<LineMatch<'a>> {
     let mut results: Vec<LineMatch<'a>> = Vec::new();
     for (number, line) in contents.lines().enumerate() {
         if line.contains(query) {
@@ -131,6 +140,17 @@ Trust me.";
                 }
             ],
             search_case_insensitive(query, contents)
+        );
+    }
+
+    #[test]
+    fn example() {
+        assert_eq!(
+            vec![LineMatch {
+                contents: "Cat in the hat",
+                number: 1
+            }],
+            search_case_sensitive("Cat", "Cat in the hat"),
         );
     }
 }

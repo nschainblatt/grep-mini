@@ -1,7 +1,9 @@
 [package]
-name = "minigrep"
+name = "grep-mini"
 version = "0.1.0"
 edition = "2021"
+description = "A minature version of the grep command line tool"
+licence = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
